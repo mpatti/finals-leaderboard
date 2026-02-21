@@ -257,17 +257,17 @@
         }
         
         try {
-          // Try direct first, then proxy
-          let response;
-          try {
-            const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
-            response = await fetch(apiUrl);
-          } catch (directError) {
-            // Fallback to proxy
-            const proxyUrl = 'https://corsproxy.io/?';
-            const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
-            response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
-          }
+          // Use corsproxy.io which is faster
+          const proxyUrl = 'https://corsproxy.io/?';
+          const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          
+          const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
           
           if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
