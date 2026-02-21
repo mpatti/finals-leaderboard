@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Finals Ruby Leaderboard</title>
+  <title>The Finals Season 9 Ruby Leaderboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -229,8 +229,8 @@
         setLoading(true);
         try {
           // Use CORS proxy since GitHub Pages can't call API directly
-          const proxyUrl = 'https://api.allorigins.win/raw?url=';
-          const apiUrl = 'https://api.the-finals-leaderboard.com/v1/leaderboard/s4/crossplay?limit=100';
+          const proxyUrl = 'https://corsproxy.io/?';
+          const apiUrl = 'https://api.the-finals-leaderboard.com/v1/leaderboard/s9/crossplay?limit=100';
           const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
           const data = await response.json();
           const players = data.data.map(p => ({
@@ -266,7 +266,7 @@
         <div className="container">
           <header>
             <h1>💎 The Finals Ruby Leaderboard</h1>
-            <p className="subtitle">Top 500 Ruby Ranked Players</p>
+            <p className="subtitle">Season 9 Ruby Ranked Players</p>
           </header>
           
           <div className="controls">
