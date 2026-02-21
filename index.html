@@ -241,14 +241,14 @@
       const [lastUpdated, setLastUpdated] = useState(null);
       const [playerCount, setPlayerCount] = useState(0);
       
-      const fetchData = useCallback(async (plat) => {
+      const fetchData = useCallback(async (plat, force = false) => {
         setLoading(true);
         setError(null);
         
         const cacheKey = `s9_${plat}`;
         const cached = cache[cacheKey];
         
-        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        if (!force && cached && Date.now() - cached.timestamp < CACHE_DURATION) {
           setPlayers(cached.data.slice(0, 1000));
           setPlayerCount(cached.count);
           setLastUpdated(new Date(cached.timestamp));
@@ -344,7 +344,7 @@
               onChange={(e) => setSearch(e.target.value)}
             />
             
-            <button className="refresh-btn" onClick={() => fetchData(platform)} disabled={loading}>
+            <button className="refresh-btn" onClick={() => fetchData(platform, true)} disabled={loading}>
               {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>
