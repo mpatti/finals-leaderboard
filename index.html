@@ -257,8 +257,10 @@
         }
         
         try {
+          // Use CORS proxy since API doesn't allow direct browser calls
+          const proxyUrl = 'https://api.allorigins.win/raw?url=';
           const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
-          const response = await fetch(apiUrl);
+          const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
           
           if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
