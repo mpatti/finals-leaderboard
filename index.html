@@ -257,12 +257,12 @@
         }
         
         try {
-          // Use corsproxy.io which is faster
-          const proxyUrl = 'https://corsproxy.io/?';
+          // Use allorigins as primary proxy
+          const proxyUrl = 'https://api.allorigins.win/raw?url=';
           const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
           
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
           
           const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
             signal: controller.signal
