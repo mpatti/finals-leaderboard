@@ -34,11 +34,11 @@
     
     header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
     
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: 700;
       margin-bottom: 8px;
       background: linear-gradient(135deg, #ff4757, #ff6b7a);
@@ -58,14 +58,31 @@
       margin-bottom: 25px;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
+    }
+    
+    .platform-select {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    
+    .platform-select:focus {
+      outline: none;
+      border-color: var(--accent);
     }
     
     .search-input {
       flex: 1;
-      min-width: 250px;
-      max-width: 400px;
-      padding: 14px 20px;
-      border-radius: 12px;
+      min-width: 200px;
+      max-width: 350px;
+      padding: 12px 20px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
@@ -76,16 +93,15 @@
     .search-input:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 20px var(--accent-glow);
     }
     
     .refresh-btn {
-      padding: 14px 24px;
-      border-radius: 12px;
+      padding: 12px 20px;
+      border-radius: 10px;
       border: none;
       background: var(--accent);
       color: white;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
@@ -97,11 +113,6 @@
       box-shadow: 0 8px 25px var(--accent-glow);
     }
     
-    .refresh-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
     .leaderboard {
       background: var(--card);
       border-radius: 16px;
@@ -111,21 +122,21 @@
     
     .leaderboard-header {
       display: grid;
-      grid-template-columns: 70px 1fr 150px 120px;
+      grid-template-columns: 70px 1fr 150px 100px;
       padding: 16px 24px;
       background: rgba(255,255,255,0.03);
       border-bottom: 1px solid var(--border);
       font-weight: 600;
       color: var(--text-secondary);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
     .player-row {
       display: grid;
-      grid-template-columns: 70px 1fr 150px 120px;
-      padding: 16px 24px;
+      grid-template-columns: 70px 1fr 150px 100px;
+      padding: 14px 24px;
       border-bottom: 1px solid var(--border);
       align-items: center;
       transition: background 0.2s;
@@ -141,11 +152,7 @@
     
     .rank {
       font-weight: 700;
-      font-size: 1.1rem;
-    }
-    
-    .rank.top-3 {
-      color: #ffd700;
+      font-size: 1rem;
     }
     
     .rank-1 { color: #ffd700; }
@@ -154,49 +161,55 @@
     
     .player-name {
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .club-tag {
+      font-size: 0.7rem;
+      background: var(--accent);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
     }
     
     .score {
       color: var(--text-secondary);
+      font-weight: 500;
     }
     
-    .platform {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
+    .platform-icon {
       font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    
-    .platform.pc {
+      padding: 4px 8px;
+      border-radius: 6px;
       background: rgba(99, 102, 241, 0.2);
       color: #818cf8;
     }
     
-    .platform.console {
-      background: rgba(34, 197, 94, 0.2);
-      color: #4ade80;
-    }
-    
-    .last-updated {
-      text-align: center;
-      margin-top: 25px;
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-    
-    .loading {
+    .loading, .error, .no-results {
       text-align: center;
       padding: 60px;
       color: var(--text-secondary);
     }
     
-    .no-results {
+    .error { color: #ef4444; }
+    
+    .last-updated {
       text-align: center;
-      padding: 40px;
+      margin-top: 20px;
       color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
     }
     
     @media (max-width: 600px) {
@@ -205,7 +218,7 @@
         grid-template-columns: 50px 1fr;
         gap: 8px;
       }
-      .score, .platform { grid-column: 2; }
+      .score, .platform-icon { grid-column: 2; }
     }
   </style>
 </head>
@@ -213,44 +226,79 @@
   <div id="root"></div>
   
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useCallback } = React;
+    
+    // Simple in-memory cache
+    const cache = {};
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
     
     function App() {
       const [players, setPlayers] = useState([]);
       const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
       const [search, setSearch] = useState('');
+      const [platform, setPlatform] = useState('crossplay');
       const [lastUpdated, setLastUpdated] = useState(null);
+      const [playerCount, setPlayerCount] = useState(0);
       
-      useEffect(() => {
-        fetchData();
-      }, []);
-      
-      const fetchData = async () => {
+      const fetchData = useCallback(async (plat) => {
         setLoading(true);
+        setError(null);
+        
+        const cacheKey = `s9_${plat}`;
+        const cached = cache[cacheKey];
+        
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          setPlayers(cached.data.slice(0, 1000));
+          setPlayerCount(cached.count);
+          setLastUpdated(new Date(cached.timestamp));
+          setLoading(false);
+          return;
+        }
+        
         try {
-          // Use CORS proxy since GitHub Pages can't call API directly
-          const proxyUrl = 'https://api.allorigins.win/raw?url=';
-          const apiUrl = 'https://api.the-finals-leaderboard.com/v1/leaderboard/s9/crossplay?limit=100';
-          const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+          const apiUrl = `https://api.the-finals-leaderboard.com/v1/leaderboard/s9/${plat}?limit=1000`;
+          const response = await fetch(apiUrl);
+          
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+          
           const data = await response.json();
-          const players = data.data.map(p => ({
-            rank: p.rank,
-            name: p.name,
-            score: p.rankScore,
-            platform: p.steamName ? 'PC' : 'Console',
-            change: p.change
-          }));
-          setPlayers(players);
+          const playersData = data.data || [];
+          const sliced = playersData.slice(0, 1000);
+          
+          cache[cacheKey] = {
+            data: sliced,
+            count: data.count || playersData.length,
+            timestamp: Date.now()
+          };
+          
+          setPlayers(sliced);
+          setPlayerCount(data.count || playersData.length);
           setLastUpdated(new Date());
         } catch (e) {
-          console.error('Failed to load data:', e);
+          console.error('Failed to fetch:', e);
+          setError('Failed to load leaderboard. Please try again.');
         }
         setLoading(false);
-      };
+      }, []);
+      
+      useEffect(() => {
+        fetchData(platform);
+      }, [platform, fetchData]);
       
       const filteredPlayers = players.filter(p => 
-        p.name.toLowerCase().includes(search.toLowerCase())
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.steamName && p.steamName.toLowerCase().includes(search.toLowerCase()))
       );
+      
+      const getPlatformIcon = (p) => {
+        if (p.steamName) return 'PC';
+        if (p.psnName) return 'PSN';
+        if (p.xboxName) return 'Xbox';
+        return '?';
+      };
       
       const formatDate = (date) => {
         if (!date) return '';
@@ -265,11 +313,27 @@
       return (
         <div className="container">
           <header>
-            <h1>💎 The Finals Ruby Leaderboard</h1>
-            <p className="subtitle">Season 9 Ruby Ranked Players</p>
+            <h1>💎 The Finals - Season 9 Ruby</h1>
+            <p className="subtitle">Top 1000 Ranked Players</p>
           </header>
           
+          <div className="stats">
+            <span>Total Players: {playerCount.toLocaleString()}</span>
+            {lastUpdated && <span>Updated: {formatDate(lastUpdated)}</span>}
+          </div>
+          
           <div className="controls">
+            <select 
+              className="platform-select" 
+              value={platform} 
+              onChange={(e) => setPlatform(e.target.value)}
+            >
+              <option value="crossplay">Crossplay</option>
+              <option value="steam">Steam</option>
+              <option value="xbox">Xbox</option>
+              <option value="psn">PlayStation</option>
+            </select>
+            
             <input 
               type="text" 
               className="search-input" 
@@ -277,13 +341,16 @@
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <button className="refresh-btn" onClick={fetchData} disabled={loading}>
+            
+            <button className="refresh-btn" onClick={() => fetchData(platform)} disabled={loading}>
               {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>
           
           {loading ? (
             <div className="loading">Loading leaderboard...</div>
+          ) : error ? (
+            <div className="error">{error}</div>
           ) : filteredPlayers.length === 0 ? (
             <div className="no-results">No players found</div>
           ) : (
@@ -296,17 +363,16 @@
               </div>
               {filteredPlayers.map(player => (
                 <div key={player.rank} className="player-row">
-                  <span className={`rank rank-${player.rank}`}>#{player.rank}</span>
-                  <span className="player-name">{player.name}</span>
-                  <span className="score">{player.score.toLocaleString()}</span>
-                  <span className={`platform ${player.platform.toLowerCase()}`}>{player.platform}</span>
+                  <span className={`rank rank-${player.rank <= 3 ? player.rank : ''}`}>#{player.rank}</span>
+                  <span className="player-name">
+                    {player.name}
+                    {player.clubTag && <span className="club-tag">{player.clubTag}</span>}
+                  </span>
+                  <span className="score">{player.rankScore?.toLocaleString()}</span>
+                  <span className="platform-icon">{getPlatformIcon(player)}</span>
                 </div>
               ))}
             </div>
-          )}
-          
-          {lastUpdated && (
-            <p className="last-updated">Last updated: {formatDate(lastUpdated)}</p>
           )}
         </div>
       );
